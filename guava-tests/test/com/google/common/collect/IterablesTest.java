@@ -45,6 +45,8 @@ import java.util.Queue;
 import java.util.RandomAccess;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
@@ -367,13 +369,13 @@ public class IterablesTest extends TestCase {
 
   // Far less exhaustive than the tests in IteratorsTest
   public void testCycle() {
-    Iterable<String> cycle = Iterables.cycle("a", "b");
+    Iterable<String> cycle = Iterables.cycle("a", "b"); //Cria um ciclo com os parâmetros passados
 
-    int howManyChecked = 0;
+    int howManyChecked = 0; //Cria variável para validar as verificações e ser a condição de parada, para o teste não entrar em loop infinito.
     for (String string : cycle) {
-      String expected = (howManyChecked % 2 == 0) ? "a" : "b";
-      assertEquals(expected, string);
-      if (howManyChecked++ == 5) {
+      String expected = (howManyChecked % 2 == 0) ? "a" : "b"; // Quando o howManyChecked for par, expected terá o valor "a" caso contrário, receberá "b"
+      assertEquals(expected, string); //Checa se a posição atual do loop no Array é igual ao esperado.
+      if (howManyChecked++ == 5) { //Condição de parada para a checagem
         break;
       }
     }
@@ -381,11 +383,50 @@ public class IterablesTest extends TestCase {
     // We left the last iterator pointing to "b". But a new iterator should
     // always point to "a".
     for (String string : cycle) {
-      assertEquals("a", string);
+      assertEquals("a", string); //Checa se a partir de um nova iteração, irá apontar para o início do ciclo.
       break;
     }
 
-    assertEquals("[a, b] (cycled)", cycle.toString());
+    assertEquals("[a, b] (cycled)", cycle.toString()); //Checa se o ciclo (convertido para string) foi criado corretamente.
+  }
+  public void testCycleWithoutParams() {
+    //Given
+    AtomicBoolean isArrayListEmpty = new AtomicBoolean(); //Variável de checagem do teste.
+
+    //When
+    Iterable<String> cycle = Iterables.cycle(); //Cria um ciclo com os parâmetros passados.
+
+    if (cycle.toString().equalsIgnoreCase("[] (cycled)")) { //Checagem da criação do ciclo com array vazio.
+      isArrayListEmpty.set(true);
+    }
+
+    //Then
+    assertTrue(isArrayListEmpty.get()); //Checa se variável de controle é true.
+    assertEquals(cycle.toString(), "[] (cycled)"); //Checa se ciclo criado a partir do método é igual o passado.
+  }
+
+  public void testCycleWithArrayListParams() {
+    //Given
+    AtomicBoolean isFirstElement = new AtomicBoolean(); //Criação da variável de controle.
+
+    ArrayList<String> param = new ArrayList<String>(); //Criação do ArrayList para passar como parâmetro para o método.
+    param.add("A");
+    param.add("B");
+
+    //When
+    Iterable<String> cycle = Iterables.cycle(param); //Cria um ciclo com os parâmetros passados.
+
+    for (String element : cycle) { //Checando se o primeiro elemento do ciclo é o primeiro elemento do array passado.
+      if (element.equalsIgnoreCase("A")) {
+        isFirstElement.set(true);
+      }
+      if (isFirstElement.get()) { //Condição de parada para não entrar em loop infinito.
+        break;
+      }
+    }
+
+    //Then
+    assertTrue(isFirstElement.get()); //Checando se a variável de controle foi setada corretamente.
   }
 
   // Again, the exhaustive tests are in IteratorsTest
